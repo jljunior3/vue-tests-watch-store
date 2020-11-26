@@ -27,7 +27,11 @@ export default {
     }
   },
   async created() {
-    this.products = (await this.$axios.get('/api/products')).data.products
+    try {
+      this.products = (await this.$axios.get('/api/products')).data.products
+    } catch (error) {
+      console.log(error)
+    }
   },
 }
 </script>
