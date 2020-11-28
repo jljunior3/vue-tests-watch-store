@@ -22,6 +22,53 @@ describe('ProductList - integration', () => {
     server.shutdown()
   })
 
+  const getProducts = async (quantity = 10, overrides = []) => {
+    let overridesList = []
+
+    if (overrides.length > 0) {
+      overridesList = overrides.map((override) =>
+        server.create('product', override)
+      )
+    }
+
+    const products = [
+      ...server.createList('product', quantity),
+      ...overridesList,
+    ]
+
+    return products
+  }
+
+  const mountProductList = async (
+    quantity = 10,
+    overrides = [],
+    shouldReject = false
+  ) => {
+    // se vc colocar fit roda somente este
+    // monta o component
+    const products = await getProducts(quantity, overrides)
+
+    // faz a chamada ajax mock
+    if (shouldReject) {
+      axios.get.mockReturnValue(Promise.reject(new Error('')))
+    } else {
+      axios.get.mockReturnValue(Promise.resolve({ data: { products } }))
+    }
+
+    // instancia o compomente
+    const wrapper = mount(ProductList, {
+      mocks: {
+        $axios: axios,
+      },
+    })
+
+    // isso faz aguardar até o que vue tenha terminado suas mudanças....este é o mesmo conceito para o await do button
+    // https://vue-test-utils.vuejs.org/guides/#testing-asynchronous-behavior
+    await Vue.nextTick()
+
+    return { wrapper, products }
+  }
+
   it('should mount the component', () => {
     const wrapper = mount(ProductList)
 
@@ -49,23 +96,7 @@ describe('ProductList - integration', () => {
   })
 
   it('should mount the ProductCard component 10 times', async () => {
-    // se vc colocar fit roda somente este
-    // monta o component
-    const products = server.createList('product', 10)
-
-    // faz a chamada ajax mock
-    axios.get.mockReturnValue(Promise.resolve({ data: { products } }))
-
-    // instancia o compomente
-    const wrapper = mount(ProductList, {
-      mocks: {
-        $axios: axios,
-      },
-    })
-
-    // isso faz aguardar até o que vue tenha terminado suas mudanças....este é o mesmo conceito para o await do button
-    // https://vue-test-utils.vuejs.org/guides/#testing-asynchronous-behavior
-    await Vue.nextTick()
+    const { wrapper } = await mountProductList()
 
     const cards = wrapper.findAllComponents(ProductCard) // Verifica o componente pai tem este filho ProductCard
     expect(cards).toHaveLength(10)
@@ -90,26 +121,18 @@ describe('ProductList - integration', () => {
 
   it('should filter the product list when a search is performed', async () => {
     // Arrange
-    const products = [
-      ...server.createList('product', 10),
-      server.create('product', {
-        title: 'Meu relógio amado',
-      }),
-      server.create('product', {
-        title: 'Meu outro relógio estimado',
-      }),
-    ]
-
-    axios.get.mockReturnValue(Promise.resolve({ data: { products } }))
-
-    // instancia o compomente
-    const wrapper = mount(ProductList, {
-      mocks: {
-        $axios: axios,
-      },
-    })
-
-    await Vue.nextTick()
+    const { wrapper } = await mountProductList(
+      10,
+      [
+        {
+          title: 'Meu relógio amado',
+        },
+        {
+          title: 'Meu outro relógio estimado',
+        },
+      ],
+      false
+    )
 
     // Act
     // pesquisa o componente search dentro do component ProductList(Pai)
@@ -127,23 +150,15 @@ describe('ProductList - integration', () => {
 
   it('should filter the product list when a search is cleanned', async () => {
     // Arrange
-    const products = [
-      ...server.createList('product', 10),
-      server.create('product', {
-        title: 'Meu relógio amado',
-      }),
-    ]
-
-    axios.get.mockReturnValue(Promise.resolve({ data: { products } }))
-
-    // instancia o compomente
-    const wrapper = mount(ProductList, {
-      mocks: {
-        $axios: axios,
-      },
-    })
-
-    await Vue.nextTick()
+    const { wrapper } = await mountProductList(
+      10,
+      [
+        {
+          title: 'Meu relógio amado',
+        },
+      ],
+      false
+    )
 
     // Act
     const search = wrapper.findComponent(Search)
