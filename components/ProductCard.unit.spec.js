@@ -6,6 +6,7 @@ describe('ProductCard - unit', () => {
   let server
 
   const mountProductCard = () => {
+    // cria um produto mockado no mirage
     const product = server.create('product', {
       title: 'Relógio bonito',
       price: '23.00',
@@ -16,6 +17,7 @@ describe('ProductCard - unit', () => {
     return {
       wrapper: mount(ProductCard, {
         propsData: {
+          // desta forma passa a props para o component
           product,
         },
       }),
@@ -24,7 +26,7 @@ describe('ProductCard - unit', () => {
   }
 
   beforeEach(() => {
-    server = makeServer({ environment: 'test' })
+    server = makeServer({ environment: 'test' }) // levanta um serviço de teste do mirage
   })
 
   afterEach(() => {
@@ -33,23 +35,23 @@ describe('ProductCard - unit', () => {
 
   it('should match the snapshot', () => {
     const { wrapper } = mountProductCard()
-    expect(wrapper.element).toMatchSnapshot()
+    expect(wrapper.element).toMatchSnapshot() // verifica se é igual a "foto" tirada do compomente
   })
 
   it('should mount the component', () => {
     const { wrapper } = mountProductCard()
 
     expect(wrapper.vm).toBeDefined()
-    expect(wrapper.text()).toContain('Relógio bonito')
-    expect(wrapper.text()).toContain('23.00')
+    expect(wrapper.text()).toContain('Relógio bonito') // verifica se contem este texto
+    expect(wrapper.text()).toContain('23.00') // verifica se contem este texto
   })
 
   it('should emit the event addToCart with product object when button gets clicked', async () => {
     const { wrapper, product } = mountProductCard()
-    await wrapper.find('button').trigger('click')
+    await wrapper.find('button').trigger('click') // procura o primeiro botão e dá um gatilho de click nele
 
-    expect(wrapper.emitted().addToCart).toBeTruthy()
-    expect(wrapper.emitted().addToCart.length).toBe(1)
-    expect(wrapper.emitted().addToCart[0]).toEqual([{ product }])
+    expect(wrapper.emitted().addToCart).toBeTruthy() // verifica se foi emitido um evento do vue
+    expect(wrapper.emitted().addToCart.length).toBe(1) // verifica o tamanho do evento emitido (é um array)
+    expect(wrapper.emitted().addToCart[0]).toEqual([{ product }]) // verificar se o payload do evento esta correto
   })
 })
