@@ -8,6 +8,9 @@
       />
       <div class="mx-3">
         <h3 class="text-sm text-gray-600">{{ product.title }}</h3>
+        <button data-testid="remove-button" @click="removeProduct">
+          remover
+        </button>
         <div class="flex items-center mt-2">
           <button
             data-testid="-"
@@ -75,6 +78,9 @@ export default {
       } else {
         this.quantity = 0
       }
+    },
+    removeProduct() {
+      this.$cart.removeProduct(this.product.id)
     },
   },
 }

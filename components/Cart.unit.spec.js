@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import Cart from '@/components/Cart'
 import CartItem from '@/components/CartItem'
 import { makeServer } from '@/miragejs/server'
+import { CartManager } from '@/managers/CartManager'
 
 describe('Cart', () => {
   let server
@@ -62,5 +63,35 @@ describe('Cart', () => {
     })
     expect(wrapper.findAllComponents(CartItem)).toHaveLength(2)
     expect(wrapper.text()).not.toContain('Cart is empty')
+  })
+
+  it('should display a button to clear cart', () => {
+    const products = server.createList('product', 2)
+    const wrapper = mount(Cart, {
+      propsData: {
+        products,
+      },
+    })
+    const button = wrapper.find('[data-testid="clear-cart-button"]')
+
+    expect(button.exists()).toBe(true)
+  })
+
+  it('should call cart manager clearProducts() wheren button gets clicked', async () => {
+    const cartManager = new CartManager()
+
+    const product = server.create('product')
+    const wrapper = mount(Cart, {
+      propsData: {
+        product,
+      },
+      mocks: {
+        $cart: cartManager,
+      },
+    })
+    const spy = jest.spyOn(cartManager, 'clearProducts')
+    await wrapper.find('[data-testid="clear-cart-button"]').trigger('click')
+
+    expect(spy).toHaveBeenCalledTimes(1)
   })
 })
