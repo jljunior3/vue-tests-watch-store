@@ -1,7 +1,19 @@
 import { mount } from '@vue/test-utils'
 import Cart from '@/components/Cart'
+import CartItem from '@/components/CartItem'
+import { makeServer } from '@/miragejs/server'
 
 describe('Cart', () => {
+  let server
+
+  beforeEach(() => {
+    server = makeServer({ environment: 'test' }) // levanta um serviço de teste do mirage
+  })
+
+  afterEach(() => {
+    server.shutdown()
+  })
+
   it('should mount the component', async () => {
     const wrapper = mount(Cart)
     expect(wrapper.vm).toBeDefined()
@@ -33,5 +45,22 @@ describe('Cart', () => {
     // retorna um array com todas as classes do componente
     // neste caso a classe hidden não deve constar
     expect(wrapper.classes()).not.toContain('hidden')
+  })
+
+  it('should display "Cart is empty" when there are no products', async () => {
+    const wrapper = mount(Cart)
+    // pesquisa se existe esta string no componente
+    expect(wrapper.text()).toContain('Cart is empty')
+  })
+
+  it('should display 2 instances of CartItem when 2 products are provided', () => {
+    const products = server.createList('product', 2)
+    const wrapper = mount(Cart, {
+      propsData: {
+        products,
+      },
+    })
+    expect(wrapper.findAllComponents(CartItem)).toHaveLength(2)
+    expect(wrapper.text()).not.toContain('Cart is empty')
   })
 })
